@@ -2,6 +2,8 @@ let buttons = document.querySelectorAll(".call-lift-btn");
 const addLiftBtn = document.querySelector(".add-lift-btn");
 const addFloorBtn = document.querySelector(".add-floor-btn");
 let liftEls = document.querySelectorAll(".lift-container");
+let leftDoors = document.querySelectorAll(".left-door");
+let rightDoors = document.querySelectorAll(".right-door");
 const floorsContainer = document.querySelector(".floors");
 let floors = document.querySelectorAll(".floor");
 
@@ -46,14 +48,11 @@ class Queue {
  *
  */
 
-const lifts = Array.from(
-  document.querySelectorAll(".lift-container"),
-  (el) => ({
-    htmlEl: el,
-    busy: false,
-    currFloor: 0,
-  })
-);
+const lifts = Array.from(document.querySelectorAll(".lift-container"), (el) => ({
+  htmlEl: el,
+  busy: false,
+  currFloor: 0,
+}));
 
 function getLifts() {
   return lifts;
@@ -91,7 +90,7 @@ function getClosestEmptyLift(destFloor) {
 
 const getMaxLifts = () => {
   const viewportwidth = document.getElementsByTagName("body")[0].clientWidth;
-  return Math.floor((viewportwidth - 100) / 120);
+  return Math.floor(((viewportwidth - 100)/120));
 };
 
 const callLift = () => {
@@ -101,6 +100,42 @@ const callLift = () => {
     lifts[index].busy = true;
     moveLift(lift.htmlEl, requests.dequeue(), index);
   }
+};
+
+/**
+ *
+ *    LIFT ACTIONS -> animations
+ *    open, close, move up, down.
+ *
+ */
+const openLift = (index) => {
+  buttons.disabled = true;
+  rightDoors[index].classList.add("right-door-open");
+  leftDoors[index].classList.add("left-door-open");
+
+  rightDoors[index].classList.remove("right-door-close");
+  leftDoors[index].classList.remove("left-door-close");
+};
+
+const closeLift = (index) => {
+  rightDoors[index].classList.add("right-door-close");
+  leftDoors[index].classList.add("left-door-close");
+
+  rightDoors[index].classList.remove("right-door-open");
+  leftDoors[index].classList.remove("left-door-open");
+  buttons.disabled = false;
+
+  setTimeout(() => {
+    lifts[index].busy = false;
+    dispatchliftIdle();
+  }, 2500);
+};
+
+const openCloseLift = (index) => {
+  openLift(index);
+  setTimeout(() => {
+    closeLift(index);
+  }, 3000);
 };
 
 const moveLift = (lift, destFloor, index) => {
@@ -177,11 +212,13 @@ function addLift() {
     busy: false,
     currFloor: 0,
   });
+  leftDoors = document.querySelectorAll(".left-door");
+  rightDoors = document.querySelectorAll(".right-door");
 
-  if (lifts.length >= getMaxLifts()) {
+  if(lifts.length >= getMaxLifts()) {
     console.log("Max lifts added");
     addLiftBtn.disabled = true;
-    addLiftBtn.textContent = "Max lifts added";
+    addLiftBtn.textContent = "Max lifts added"
     return;
   }
 }
@@ -217,16 +254,14 @@ function getFloorEl() {
   const floorEl = document.createElement("div");
   floorEl.classList.add("floor");
   floorEl.innerHTML += `
-  <div class="nav-buttons">
-  <button class="up-lift-btn" data-lift-num="${newLiftNum}">
-      <i class="arrow up"></i>
-  </button>
-  <button class="down-lift-btn" data-lift-num="${newLiftNum}">
-      <i class="arrow down"></i>
-  </button>
-  <div class="lift-container">
-</div>
-</div>
+                  <div class="lift-buttons">
+                      <button class="call-lift-btn open-lift-btn" data-lift-num="${newLiftNum}">
+                          <i class="fa-solid fa-angle-up"></i>
+                      </button>
+                      <button class="call-lift-btn close-lift-btn" data-lift-num="${newLiftNum}">
+                          <i class="fa-solid fa-angle-down"></i>
+                      </button>
+                  </div>
                 `;
   return floorEl;
 }
